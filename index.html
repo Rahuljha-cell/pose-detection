@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Pose Detection</title>
+    <style>
+        :root {
+            --primary-color: #8e44ad;
+            --secondary-color: #9b59b6;
+            --background-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --text-color: #ffffff;
+            --container-bg: rgba(255, 255, 255, 0.1);
+            --success-color: #2ecc71;
+            --error-color: #e74c3c;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: var(--background-gradient);
+            color: var(--text-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            background: var(--container-bg);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+            padding: 30px 40px;
+            max-width: 500px;
+            width: 100%;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            font-size: 1.1em;
+            margin-bottom: 30px;
+            opacity: 0.8;
+        }
+
+        #webcam-container {
+            position: relative;
+            width: 100%;
+            padding-top: 100%; /* 1:1 Aspect Ratio */
+            margin: 0 auto 20px;
+            border-radius: 15px;
+            overflow: hidden;
+            background: #000;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+
+        #webcam-container canvas, #webcam-container img {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        #controls {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .control-button {
+            background: var(--text-color);
+            color: var(--primary-color);
+            border: none;
+            padding: 15px 30px;
+            border-radius: 30px;
+            font-size: 1.1em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .control-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+        }
+        
+        .control-button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        #status {
+            margin-bottom: 20px;
+            font-style: italic;
+            min-height: 24px;
+        }
+        
+        #status.success { color: var(--success-color); }
+        #status.error { color: var(--error-color); }
+
+        #label-container {
+            text-align: left;
+        }
+
+        .prediction-item {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 10px;
+            transition: all 0.3s ease;
+        }
+
+        .prediction-item.top-prediction {
+            background: var(--primary-color);
+            color: var(--text-color);
+            transform: scale(1.05);
+            box-shadow: 0 5px 20px rgba(142, 68, 173, 0.5);
+        }
+
+        .prediction-label {
+            font-size: 1.2em;
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+
+        .confidence-bar-container {
+            width: 100%;
+            height: 10px;
+            background-color: rgba(255, 255, 255, 0.3);
+            border-radius: 5px;
+            overflow: hidden;
+        }
+        
+        .top-prediction .confidence-bar-container {
+             background-color: rgba(255, 255, 255, 0.5);
+        }
+
+        .confidence-bar-fill {
+            height: 100%;
+            width: 0%;
+            background-color: var(--success-color);
+            border-radius: 5px;
+            transition: width 0.3s ease-in-out;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>🧘 AI Pose Detector</h1>
+        <p class="subtitle">Powered by Teachable Machine</p>
+
+        <div id="webcam-container">
+            <!-- Canvas or Img will be inserted here by JavaScript -->
+        </div>
+        
+        <div id="status">Click Start to load the model and begin</div>
+
+        <div id="controls">
+            <button id="webcam-button" class="control-button" type="button">Start Webcam</button>
+            <button id="upload-button" class="control-button" type="button">Upload Image</button>
+            <input type="file" id="file-input" accept="image/*" style="display: none;">
+        </div>
+
+        <div id="label-container">
+            <!-- Prediction labels will be inserted here -->
+        </div>
+    </div>
+
+    <!-- Load the required libraries with the exact compatible versions from Teachable Machine -->
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@1.3.1/dist/tf.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@teachablemachine/pose@0.8/dist/teachablemachine-pose.min.js"></script>
+
+    <script type="text/javascript">
+        // --- Configuration and State ---
+        const URL = "https://teachablemachine.withgoogle.com/models/VpwDgIlFx/";
+        let model, webcam, ctx, maxPredictions;
+        let isWebcamRunning = false;
+        let animationFrameId;
+
+        const statusEl = document.getElementById('status');
+        const webcamButton = document.getElementById('webcam-button');
+        const uploadButton = document.getElementById('upload-button');
+        const fileInput = document.getElementById('file-input');
+        const webcamContainer = document.getElementById("webcam-container");
+        const labelContainer = document.getElementById("label-container"); 
+
+        // --- Core Application Logic ---
+
+        // Load the model once
+        async function loadModel() {
+            if (model) return; // Don't re-load if it exists
+            updateStatus('Loading model...', 'loading');
+            try {
+                const modelURL = URL + "model.json";
+                const metadataURL = URL + "metadata.json";
+                model = await tmPose.load(modelURL, metadataURL);
+                maxPredictions = model.getTotalClasses();
+                updateStatus('Model loaded. Ready for webcam or upload.', 'success');
+            } catch (error) {
+                console.error("Model loading failed:", error);
+                updateStatus('Could not load the model. Please check the URL and your connection.', 'error');
+                throw error; // Propagate error to stop execution
+            }
+        }
+
+        // Initialize and start the webcam
+        async function startWebcam() {
+            if (isWebcamRunning) return;
+            webcamButton.textContent = 'Starting...';
+            webcamButton.disabled = true;
+
+            try {
+                await loadModel(); // Ensure model is loaded
+                
+                // Setup webcam
+                const size = 400;
+                const flip = true;
+                webcam = new tmPose.Webcam(size, size, flip);
+                
+                updateStatus('Requesting camera access...', 'loading');
+                await webcam.setup();
+                await webcam.play();
+                isWebcamRunning = true;
+                
+                // Start the prediction loop
+                animationFrameId = window.requestAnimationFrame(loop);
+
+                // Append canvas to the container
+                webcamContainer.innerHTML = '';
+                webcamContainer.appendChild(webcam.canvas);
+                ctx = webcam.canvas.getContext("2d");
+                
+                updateStatus('Webcam active. Detecting poses...', 'success');
+                webcamButton.textContent = 'Stop Webcam';
+                webcamButton.disabled = false;
+
+            } catch (error) {
+                console.error("Webcam initialization failed:", error);
+                let msg = "Failed to start webcam. Check console.";
+                if (error.name === "NotAllowedError") msg = "Camera access denied.";
+                updateStatus(msg, 'error');
+                stopWebcam(); // Clean up on failure
+            }
+        }
+
+        // Stop the webcam and clean up
+        function stopWebcam() {
+            isWebcamRunning = false;
+            if (webcam) webcam.stop();
+            if (animationFrameId) window.cancelAnimationFrame(animationFrameId);
+            
+            webcamButton.textContent = 'Start Webcam';
+            webcamButton.disabled = false;
+            if (model) updateStatus('Model loaded. Ready for webcam or upload.', 'success');
+            else updateStatus('Click a button to begin.', '');
+        }
+
+        // Handle image upload and analysis
+        async function processImageUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            if (isWebcamRunning) stopWebcam();
+            webcamContainer.innerHTML = '';
+            labelContainer.innerHTML = '';
+            updateStatus('Analyzing image...', 'loading');
+
+            try {
+                await loadModel();
+
+                const img = new Image();
+                // FIX: Use window.URL to avoid conflict with the URL constant
+                img.src = window.URL.createObjectURL(file);
+                img.onload = async () => {
+                    // Create a canvas to draw the image and pose
+                    const canvas = document.createElement('canvas');
+                    const canvasSize = Math.min(img.width, img.height, 500);
+                    canvas.width = canvasSize;
+                    canvas.height = canvasSize;
+                    ctx = canvas.getContext('2d');
+                    // Draw image scaled and centered
+                    const hRatio = canvas.width / img.width;
+                    const vRatio = canvas.height / img.height;
+                    const ratio = Math.max(hRatio, vRatio);
+                    const centerShift_x = (canvas.width - img.width * ratio) / 2;
+                    const centerShift_y = (canvas.height - img.height * ratio) / 2;
+                    ctx.drawImage(img, 0, 0, img.width, img.height, centerShift_x, centerShift_y, img.width * ratio, img.height * ratio);
+                    
+                    webcamContainer.appendChild(canvas);
+
+                    // Make a one-time prediction
+                    const { pose, posenetOutput } = await model.estimatePose(canvas);
+                    const prediction = await model.predict(posenetOutput);
+                    
+                    displayPredictions(prediction);
+                    drawPose(pose);
+                    
+                    updateStatus('Analysis complete!', 'success');
+                    // FIX: Use window.URL to avoid conflict with the URL constant
+                    window.URL.revokeObjectURL(img.src);
+                };
+            } catch (error) {
+                console.error("Image processing failed:", error);
+                updateStatus('Could not analyze the image.', 'error');
+            }
+        }
+
+        // Main prediction loop for webcam
+        async function loop() {
+            if (!isWebcamRunning) return;
+            webcam.update();
+            const { pose, posenetOutput } = await model.estimatePose(webcam.canvas);
+            const prediction = await model.predict(posenetOutput);
+            displayPredictions(prediction);
+            drawPose(pose);
+            animationFrameId = window.requestAnimationFrame(loop);
+        }
+
+        // --- UI and Drawing Functions ---
+
+        // Display prediction results in the UI
+        function displayPredictions(prediction) {
+            labelContainer.innerHTML = ''; // Clear previous results
+            let topPredictionIndex = 0;
+            for (let i = 1; i < maxPredictions; i++) {
+                if (prediction[i].probability > prediction[topPredictionIndex].probability) {
+                    topPredictionIndex = i;
+                }
+            }
+
+            for (let i = 0; i < maxPredictions; i++) {
+                const item = document.createElement("div");
+                item.classList.add("prediction-item");
+                if (i === topPredictionIndex) item.classList.add('top-prediction');
+                
+                const probability = prediction[i].probability;
+                item.innerHTML = `
+                    <div class="prediction-label">${prediction[i].className}</div>
+                    <div class="confidence-bar-container">
+                        <div class="confidence-bar-fill" style="width: ${probability * 100}%"></div>
+                    </div>
+                `;
+                labelContainer.appendChild(item);
+            }
+        }
+
+        // Draw the pose skeleton on the canvas
+        function drawPose(pose) {
+            if (ctx && pose) {
+                const minPartConfidence = 0.5;
+                tmPose.drawKeypoints(pose.keypoints, minPartConfidence, ctx);
+                tmPose.drawSkeleton(pose.keypoints, minPartConfidence, ctx, '#2ecc71', 3);
+            }
+        }
+        
+        // --- Event Listeners ---
+        webcamButton.addEventListener('click', () => {
+            if (isWebcamRunning) stopWebcam();
+            else startWebcam();
+        });
+        uploadButton.addEventListener('click', () => fileInput.click());
+        fileInput.addEventListener('change', processImageUpload);
+        
+        function updateStatus(message, type) {
+            statusEl.textContent = message;
+            statusEl.className = '';
+            if (type) statusEl.classList.add(type);
+        }
+
+    </script>
+</body>
+</html>
