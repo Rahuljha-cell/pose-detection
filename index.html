@@ -1,448 +1,343 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VAKTA.AI - AI Powered Public Speaking Coach</title>
-    <style>
-        :root {
-            --primary-color: #8e44ad;
-            --secondary-color: #9b59b6;
-            --background-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            --text-color: #ffffff;
-            --container-bg: rgba(255, 255, 255, 0.1);
-            --success-color: #2ecc71;
-            --error-color: #e74c3c;
-        }
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: var(--background-gradient);
-            color: var(--text-color);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            min-height: 100vh;
-            padding: 20px;
-        }
-
-        .container {
-            background: var(--container-bg);
-            backdrop-filter: blur(10px);
-            border-radius: 20px;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
-            padding: 30px 40px;
-            max-width: 500px;
-            width: 100%;
-            text-align: center;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-        }
-
-        h1 {
-            font-size: 2.5em;
-            margin-bottom: 10px;
-        }
-
-        .subtitle {
-            font-size: 1.1em;
-            margin-bottom: 30px;
-            opacity: 0.8;
-        }
-
-        #webcam-container {
-            position: relative;
-            width: 100%;
-            padding-top: 100%; /* 1:1 Aspect Ratio */
-            margin: 0 auto 20px;
-            border-radius: 15px;
-            overflow: hidden;
-            background: #000;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-        }
-
-        #webcam-container canvas, #webcam-container img {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-
-        #controls {
-            display: flex;
-            justify-content: center;
-            gap: 15px;
-            margin-bottom: 20px;
-        }
-
-        .control-button {
-            background: var(--text-color);
-            color: var(--primary-color);
-            border: none;
-            padding: 15px 30px;
-            border-radius: 30px;
-            font-size: 1.1em;
-            font-weight: bold;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
-        }
-
-        .control-button:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
-        }
-        
-        .control-button:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
-
-        #status {
-            margin-bottom: 20px;
-            font-style: italic;
-            min-height: 24px;
-        }
-        
-        #status.success { color: var(--success-color); }
-        #status.error { color: var(--error-color); }
-
-        #label-container {
-            text-align: left;
-        }
-
-        .prediction-item {
-            background: rgba(0, 0, 0, 0.2);
-            border-radius: 10px;
-            padding: 15px;
-            margin-bottom: 10px;
-            transition: all 0.3s ease;
-        }
-
-        .prediction-item.top-prediction {
-            background: var(--primary-color);
-            color: var(--text-color);
-            transform: scale(1.05);
-            box-shadow: 0 5px 20px rgba(142, 68, 173, 0.5);
-        }
-
-        .prediction-label {
-            font-size: 1.2em;
-            font-weight: bold;
-            margin-bottom: 8px;
-        }
-
-        .confidence-bar-container {
-            width: 100%;
-            height: 10px;
-            background-color: rgba(255, 255, 255, 0.3);
-            border-radius: 5px;
-            overflow: hidden;
-        }
-        
-        .top-prediction .confidence-bar-container {
-             background-color: rgba(255, 255, 255, 0.5);
-        }
-
-        .confidence-bar-fill {
-            height: 100%;
-            width: 0%;
-            background-color: var(--success-color);
-            border-radius: 5px;
-            transition: width 0.3s ease-in-out;
-        }
-        
-        /* New Styles for Pop-up Message */
-        #popup-message {
-            position: fixed;
-            bottom: -100px; /* Start off-screen */
-            left: 50%;
-            transform: translateX(-50%);
-            background: var(--success-color);
-            color: white;
-            padding: 15px 25px;
-            border-radius: 15px;
-            box-shadow: 0 5px 20px rgba(0,0,0,0.3);
-            font-size: 1.2em;
-            font-weight: bold;
-            z-index: 1000;
-            transition: bottom 0.5s ease-in-out;
-            max-width: 90%;
-        }
-
-        #popup-message.show {
-            bottom: 30px; /* Slide into view */
-        }
-    </style>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>VAKTA.AI — Debugged (Image upload fixed)</title>
+  <style>
+    :root{--bg:#0b0f14;--muted:#9bb0d0;--accent:#7c3aed;--good:#22c55e;--bad:#ef4444;--glass:rgba(255,255,255,.03)}
+    html,body{height:100%;margin:0;font-family:Inter,ui-sans-serif,system-ui,Segoe UI,Roboto,Helvetica,Arial}
+    body{background:linear-gradient(120deg,#071020,#0b0f14);color:#e6f0ff;display:flex;align-items:center;justify-content:center;padding:20px}
+    .card{width:100%;max-width:1100px;border-radius:16px;padding:18px;background:linear-gradient(180deg,var(--glass),rgba(255,255,255,.01));box-shadow:0 20px 60px rgba(0,0,0,.5);border:1px solid rgba(148,163,184,.08)}
+    .row{display:flex;gap:18px}
+    .left{flex:1;min-width:320px}
+    .right{width:380px}
+    h1{font-size:20px;margin:0 0 6px}
+    .subtitle{color:var(--muted);font-size:13px;margin-bottom:12px}
+    #webcam-container.analyzed canvas {
+    margin-top: 20px;
+  }
+    #webcam-container{width:100%;padding-top:56.25%;position:relative;border-radius:12px;overflow:hidden;background:#000}
+    #webcam-container video,#webcam-container canvas,#webcam-container img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+    .controls{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+    .btn{background:transparent;border:1px solid rgba(255,255,255,.06);padding:8px 12px;border-radius:10px;color:inherit;cursor:pointer}
+    .btn.primary{background:linear-gradient(90deg,var(--accent),#22d3ee);color:#041026;border:none}
+    .panel{background:rgba(255,255,255,.02);padding:12px;border-radius:12px;margin-top:12px}
+    .small{font-size:13px;color:var(--muted)}
+    .list{display:flex;flex-direction:column;gap:8px;margin-top:8px}
+    .test{display:flex;justify-content:space-between;align-items:center;padding:8px;border-radius:8px;background:rgba(255,255,255,.01);border:1px solid rgba(255,255,255,.02)}
+    .ok{color:var(--good)}.fail{color:var(--bad)}
+    #label-container{margin-top:8px}
+    .pred-item{padding:8px;border-radius:8px;background:rgba(255,255,255,.02);margin-bottom:8px}
+    #popup-message{position:fixed;left:50%;transform:translateX(-50%);bottom:-120px;background:var(--good);padding:12px 18px;border-radius:12px;color:#021008;font-weight:700;transition:bottom .35s}
+    #popup-message.show{bottom:28px}
+  </style>
 </head>
 <body>
-
-    <div class="container">
-        <h1>🧘 VAKTA.AI - AI Powered Public Speaking Coach</h1>
-        <p class="subtitle">Powered by Teachable Machine</p>
-
-        <div id="webcam-container">
-            <!-- Canvas or Img will be inserted here by JavaScript -->
-        </div>
-        
-        <div id="status">Click Start to load the model and begin</div>
-
-        <div id="controls">
-            <button id="webcam-button" class="control-button" type="button">Start Webcam</button>
-            <button id="upload-button" class="control-button" type="button">Upload Image</button>
-            <input type="file" id="file-input" accept="image/*" style="display: none;">
-        </div>
-
-        <div id="label-container">
-            <!-- Prediction labels will be inserted here -->
-        </div>
+  <div class="card">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px">
+      <div>
+        <h1>VAKTA.AI — Public Speaking Coach</h1>
+        <div class="subtitle">Fixed image upload bug — model URL no longer shadows window.URL</div>
+      </div>
+      <div class="small">Shortcuts: <kbd>W</kbd> Start/Stop • <kbd>U</kbd> Upload • <kbd>S</kbd> Snapshot</div>
     </div>
-    
-    <!-- New Pop-up Element -->
-    <div id="popup-message"></div>
 
-    <!-- Load the required libraries with the exact compatible versions from Teachable Machine -->
-    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@1.3.1/dist/tf.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@teachablemachine/pose@0.8/dist/teachablemachine-pose.min.js"></script>
+    <div class="row" style="margin-top:12px">
+      <div class="left">
+        <div id="webcam-container"></div>
 
-    <script type="text/javascript">
-        // --- Configuration and State ---
-        const URL = "https://teachablemachine.withgoogle.com/models/VpwDgIlFx/";
-        let model, webcam, ctx, maxPredictions;
-        let isWebcamRunning = false;
-        let animationFrameId;
+        <div class="controls">
+          <button id="webcam-button" class="btn primary">▶ Start Webcam</button>
+          <button id="upload-button" class="btn">⬆ Upload Image</button>
+          <button id="snapshot-button" class="btn" disabled>📸 Snapshot</button>
+          <button id="clear-button" class="btn">✖ Reset</button>
+          <input id="file-input" type="file" accept="image/*" style="display:none" />
+        </div>
 
-        // New state variables for the pop-up
-        let lastShownPose = null;
-        let popupTimeout;
-        
-        // New object for pop-up messages
-        const postureMessages = {
-            "Confident Posture": "✅ Great posture! Keep it up!",
-            "Overactive Gesture": "🧘 Calm your movements for better impact.",
-            "Slouched Posture": "🧍 Stand tall and straighten your back.",
-            "Fidgeting": "🤏 Try to stay still and focused.",
-            "Frozen Posture": "🧊 Loosen up—relax your body a bit."
-        };
+        <div id="popup-message"></div>
+      </div>
 
-        const statusEl = document.getElementById('status');
-        const webcamButton = document.getElementById('webcam-button');
-        const uploadButton = document.getElementById('upload-button');
-        const fileInput = document.getElementById('file-input');
-        const webcamContainer = document.getElementById("webcam-container");
-        const labelContainer = document.getElementById("label-container"); 
+      <div class="right">
+        <div class="panel">
+          <strong>Status</strong>
+          <div id="status" class="small" style="margin-top:8px">Click Start to load the model</div>
+        </div>
 
-        // --- Core Application Logic ---
+        <div class="panel" style="margin-top:12px">
+          <strong>Predictions</strong>
+          <div id="label-container" class="small"></div>
+        </div>
 
-        // Load the model once
-        async function loadModel() {
-            if (model) return;
-            updateStatus('Loading model...', 'loading');
-            try {
-                const modelURL = URL + "model.json";
-                const metadataURL = URL + "metadata.json";
-                model = await tmPose.load(modelURL, metadataURL);
-                maxPredictions = model.getTotalClasses();
-                updateStatus('Model loaded. Ready for webcam or upload.', 'success');
-            } catch (error) {
-                console.error("Model loading failed:", error);
-                updateStatus('Could not load the model. Please check the URL and your connection.', 'error');
-                throw error;
-            }
+        <div class="panel" style="margin-top:12px; display: none;">
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <strong>Diagnostics (tests)</strong>
+            <button id="run-tests" class="btn">Run</button>
+          </div>
+          <div id="tests" class="list small"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- keep exact Teachable Machine versions -->
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@1.3.1/dist/tf.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@teachablemachine/pose@0.8/dist/teachablemachine-pose.min.js"></script>
+
+  <script>
+    // -----------------------------
+    // Config & globals
+    // -----------------------------
+    const TM_URL = "https://teachablemachine.withgoogle.com/models/VpwDgIlFx/"; // model URL (renamed to avoid shadowing window.URL)
+    let model = null, maxPredictions = 0;
+    let stream = null, videoEl = null, overlayCanvas = null, ctx = null;
+    let isWebcamRunning = false, animationFrameId = null;
+
+    // UI elements
+    const statusEl = document.getElementById('status');
+    const webcamButton = document.getElementById('webcam-button');
+    const uploadButton = document.getElementById('upload-button');
+    const fileInput = document.getElementById('file-input');
+    const snapshotBtn = document.getElementById('snapshot-button');
+    const clearBtn = document.getElementById('clear-button');
+    const labelContainer = document.getElementById('label-container');
+    const testsEl = document.getElementById('tests');
+    const popup = document.getElementById('popup-message');
+
+    function setStatus(msg, type){ statusEl.textContent = msg; if(type==='error') statusEl.style.color = 'var(--bad)'; else statusEl.style.color = '' }
+
+    // -----------------------------
+    // Load model (safe)
+    // -----------------------------
+    async function loadModel(){
+      if(model) return;
+      setStatus('Loading model...');
+      try{
+        model = await tmPose.load(TM_URL + 'model.json', TM_URL + 'metadata.json');
+        maxPredictions = model.getTotalClasses();
+        setStatus('Model loaded. Ready.');
+      }catch(err){
+        console.error('Model load failed:', err && err.name, err && err.message);
+        setStatus('Failed to load model: ' + (err && err.message), 'error');
+        throw err;
+      }
+    }
+
+    // -----------------------------
+    // Webcam (front camera preferred)
+    // -----------------------------
+    async function startWebcam(){
+      if(isWebcamRunning) return;
+      if(!window.isSecureContext){ setStatus('Requires HTTPS or localhost to use the camera.', 'error'); return; }
+      if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){ setStatus('Camera API not supported in this browser.', 'error'); return; }
+
+      webcamButton.disabled = true; webcamButton.textContent = '⏳ Starting...';
+      try{
+        await loadModel();
+
+        // prefer front camera (user)
+        const constraints = { video: { facingMode: 'user', width:{ideal:640}, height:{ideal:480} }, audio:false };
+
+        try{
+          stream = await navigator.mediaDevices.getUserMedia(constraints);
+        }catch(err){
+          console.warn('Preferred facingMode failed, falling back to basic video:true', err && err.name);
+          stream = await navigator.mediaDevices.getUserMedia({ video:true, audio:false });
         }
 
-        // Initialize and start the webcam
-        async function startWebcam() {
-            if (isWebcamRunning) return;
-            webcamButton.textContent = 'Starting...';
-            webcamButton.disabled = true;
+        // attach and create overlay
+        videoEl = document.createElement('video');
+        videoEl.setAttribute('playsinline',''); videoEl.autoplay = true; videoEl.muted = true; videoEl.srcObject = stream;
+        videoEl.style.position = 'absolute'; videoEl.style.inset = '0'; videoEl.style.width = '100%'; videoEl.style.height = '100%'; videoEl.style.objectFit = 'cover';
 
-            try {
-                await loadModel();
-                const size = 400;
-                const flip = true;
-                webcam = new tmPose.Webcam(size, size, flip);
-                
-                updateStatus('Requesting camera access...', 'loading');
-                await webcam.setup();
-                await webcam.play();
-                isWebcamRunning = true;
-                
-                animationFrameId = window.requestAnimationFrame(loop);
+        overlayCanvas = document.createElement('canvas');
+        overlayCanvas.style.position = 'absolute'; overlayCanvas.style.inset = '0'; overlayCanvas.style.width = '100%'; overlayCanvas.style.height = '100%';
+        overlayCanvas.style.pointerEvents = 'none';
 
-                webcamContainer.innerHTML = '';
-                webcamContainer.appendChild(webcam.canvas);
-                ctx = webcam.canvas.getContext("2d");
-                
-                updateStatus('Webcam active. Detecting poses...', 'success');
-                webcamButton.textContent = 'Stop Webcam';
-                webcamButton.disabled = false;
+        const container = document.getElementById('webcam-container');
+        container.innerHTML = '';
+        container.appendChild(videoEl);
+        container.appendChild(overlayCanvas);
 
-            } catch (error) {
-                console.error("Webcam initialization failed:", error);
-                let msg = "Failed to start webcam. Check console.";
-                if (error.name === "NotAllowedError") msg = "Camera access denied.";
-                updateStatus(msg, 'error');
-                stopWebcam();
-            }
-        }
-
-        // Stop the webcam and clean up
-        function stopWebcam() {
-            isWebcamRunning = false;
-            if (webcam) webcam.stop();
-            if (animationFrameId) window.cancelAnimationFrame(animationFrameId);
-            
-            webcamButton.textContent = 'Start Webcam';
-            webcamButton.disabled = false;
-            if (model) updateStatus('Model loaded. Ready for webcam or upload.', 'success');
-            else updateStatus('Click a button to begin.', '');
-        }
-
-        // Handle image upload and analysis
-        async function processImageUpload(event) {
-            const file = event.target.files[0];
-            if (!file) return;
-
-            if (isWebcamRunning) stopWebcam();
-            webcamContainer.innerHTML = '';
-            labelContainer.innerHTML = '';
-            updateStatus('Analyzing image...', 'loading');
-
-            // FIX: Reset pop-up state for new image analysis
-            lastShownPose = null;
-            if (popupTimeout) clearTimeout(popupTimeout);
-            document.getElementById('popup-message').classList.remove('show');
-
-            try {
-                await loadModel();
-                const img = new Image();
-                img.src = window.URL.createObjectURL(file);
-                img.onload = async () => {
-                    const canvas = document.createElement('canvas');
-                    const canvasSize = Math.min(img.width, img.height, 500);
-                    canvas.width = canvasSize;
-                    canvas.height = canvasSize;
-                    ctx = canvas.getContext('2d');
-
-                    const hRatio = canvas.width / img.width;
-                    const vRatio = canvas.height / img.height;
-                    const ratio = Math.max(hRatio, vRatio);
-                    const centerShift_x = (canvas.width - img.width * ratio) / 2;
-                    const centerShift_y = (canvas.height - img.height * ratio) / 2;
-                    ctx.drawImage(img, 0, 0, img.width, img.height, centerShift_x, centerShift_y, img.width * ratio, img.height * ratio);
-                    
-                    webcamContainer.appendChild(canvas);
-
-                    const { pose, posenetOutput } = await model.estimatePose(canvas);
-                    const prediction = await model.predict(posenetOutput);
-                    
-                    displayPredictions(prediction);
-                    drawPose(pose);
-                    
-                    updateStatus('Analysis complete!', 'success');
-                    window.URL.revokeObjectURL(img.src);
-                };
-            } catch (error) {
-                console.error("Image processing failed:", error);
-                updateStatus('Could not analyze the image.', 'error');
-            }
-        }
-
-        // Main prediction loop for webcam
-        async function loop() {
-            if (!isWebcamRunning) return;
-            webcam.update();
-            const { pose, posenetOutput } = await model.estimatePose(webcam.canvas);
-            const prediction = await model.predict(posenetOutput);
-            displayPredictions(prediction);
-            drawPose(pose);
-            animationFrameId = window.requestAnimationFrame(loop);
-        }
-
-        // --- UI and Drawing Functions ---
-
-        // Display prediction results in the UI
-        function displayPredictions(prediction) {
-            let topPredictionIndex = 0;
-            for (let i = 1; i < maxPredictions; i++) {
-                if (prediction[i].probability > prediction[topPredictionIndex].probability) {
-                    topPredictionIndex = i;
-                }
-            }
-
-            labelContainer.innerHTML = '';
-            for (let i = 0; i < maxPredictions; i++) {
-                const item = document.createElement("div");
-                item.classList.add("prediction-item");
-                if (i === topPredictionIndex) item.classList.add('top-prediction');
-                
-                const probability = prediction[i].probability;
-                item.innerHTML = `
-                    <div class="prediction-label">${prediction[i].className}</div>
-                    <div class="confidence-bar-container">
-                        <div class="confidence-bar-fill" style="width: ${probability * 100}%"></div>
-                    </div>
-                `;
-                labelContainer.appendChild(item);
-            }
-            
-            // New logic for showing pop-up message
-            const topPrediction = prediction[topPredictionIndex];
-            if (topPrediction.probability > 0.90 && topPrediction.className !== lastShownPose) {
-                const message = postureMessages[topPrediction.className];
-                if (message) {
-                    showPopup(message);
-                    lastShownPose = topPrediction.className;
-                }
-            }
-        }
-
-        // Draw the pose skeleton on the canvas
-        function drawPose(pose) {
-            if (ctx && pose) {
-                const minPartConfidence = 0.5;
-                tmPose.drawKeypoints(pose.keypoints, minPartConfidence, ctx);
-                tmPose.drawSkeleton(pose.keypoints, minPartConfidence, ctx, '#2ecc71', 3);
-            }
-        }
-        
-        // New function to show the pop-up
-        function showPopup(message) {
-            const popup = document.getElementById('popup-message');
-            popup.textContent = message;
-            popup.classList.add('show');
-
-            if (popupTimeout) clearTimeout(popupTimeout);
-
-            popupTimeout = setTimeout(() => {
-                popup.classList.remove('show');
-                // Allow the same pose to be shown again after the pop-up hides
-                lastShownPose = null; 
-            }, 4000); // Hide after 4 seconds
-        }
-        
-        // --- Event Listeners ---
-        webcamButton.addEventListener('click', () => {
-            if (isWebcamRunning) stopWebcam();
-            else startWebcam();
+        // wait for metadata to size canvas
+        await new Promise((res)=>{
+          function ready(){
+            overlayCanvas.width = videoEl.videoWidth || 640; overlayCanvas.height = videoEl.videoHeight || 480; ctx = overlayCanvas.getContext('2d'); res();
+          }
+          if(videoEl.readyState >= 1) ready(); else videoEl.addEventListener('loadedmetadata', ready, {once:true});
         });
-        uploadButton.addEventListener('click', () => fileInput.click());
-        fileInput.addEventListener('change', processImageUpload);
-        
-        function updateStatus(message, type) {
-            statusEl.textContent = message;
-            statusEl.className = '';
-            if (type) statusEl.classList.add(type);
-        }
 
-    </script>
+        isWebcamRunning = true; snapshotBtn.disabled = false; webcamButton.textContent = '⏹ Stop Webcam'; webcamButton.disabled = false; setStatus('Webcam active. Detecting poses...');
+        animationFrameId = requestAnimationFrame(webcamLoop);
+
+      }catch(err){
+        console.error('Webcam init failed:', err && err.name, err && err.message, err && err.stack);
+        let msg = 'Failed to start webcam.';
+        if(err && (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError')) msg = 'Camera access denied. Allow camera permission.';
+        else if(err && (err.name === 'NotFoundError' || err.name === 'OverconstrainedError')) msg = 'No camera found.';
+        else if(err && err.name === 'NotReadableError') msg = 'Camera is busy in another app.';
+        setStatus(msg, 'error');
+        webcamButton.disabled = false; webcamButton.textContent = '▶ Start Webcam';
+      }
+    }
+
+    function stopWebcam(){
+      isWebcamRunning = false;
+      if(animationFrameId) cancelAnimationFrame(animationFrameId);
+      if(stream){ try{ stream.getTracks().forEach(t=>t.stop()); }catch(e){} stream = null; }
+      if(videoEl){ try{ videoEl.pause(); videoEl.srcObject = null; }catch(e){} videoEl.remove(); videoEl = null; }
+      if(overlayCanvas){ overlayCanvas.remove(); overlayCanvas = null; ctx = null; }
+      snapshotBtn.disabled = true; webcamButton.textContent = '▶ Start Webcam'; webcamButton.disabled = false; setStatus('Stopped.');
+    }
+
+    async function webcamLoop(){
+      if(!isWebcamRunning || !model) return;
+      try{
+        const { pose, posenetOutput } = await model.estimatePose(videoEl);
+        const prediction = await model.predict(posenetOutput);
+        renderPredictions(prediction);
+        renderPoseOnOverlay(pose);
+      }catch(err){ console.error('Frame processing error:', err && err.name, err && err.message); }
+      animationFrameId = requestAnimationFrame(webcamLoop);
+    }
+
+    // -----------------------------
+    // Image upload flow (fixed)
+    // -----------------------------
+    async function processImageUpload(e){
+      const file = e.target.files && e.target.files[0];
+      if(!file) return;
+      // stop webcam if running
+      if(isWebcamRunning) stopWebcam();
+      setStatus('Analyzing image...');
+      labelContainer.innerHTML = '';
+
+      await loadModel();
+
+      // use window.URL to avoid shadowing
+      const objectUrl = (window.URL || window.webkitURL).createObjectURL(file);
+      const img = new Image();
+      img.crossOrigin = 'anonymous'; // helpful if CORS allowed
+      img.src = objectUrl;
+
+      img.onload = async ()=>{
+        try{
+          // draw image to a square canvas (center-crop)
+          const canvas = document.createElement('canvas');
+          const size = Math.min(img.width, img.height, 640);
+          canvas.width = size; canvas.height = size;
+          const localCtx = canvas.getContext('2d');
+          const hRatio = canvas.width / img.width; const vRatio = canvas.height / img.height; const ratio = Math.max(hRatio, vRatio);
+          const cx = (canvas.width - img.width * ratio) / 2; const cy = (canvas.height - img.height * ratio) / 2;
+          localCtx.drawImage(img, 0, 0, img.width, img.height, cx, cy, img.width * ratio, img.height * ratio);
+
+          // attach the preview
+          const container = document.getElementById('webcam-container'); container.innerHTML = ''; container.appendChild(canvas); container.classList.add('analyzed');
+
+          // estimate pose & predict
+          const { pose, posenetOutput } = await model.estimatePose(canvas);
+          const prediction = await model.predict(posenetOutput);
+
+          renderPredictions(prediction);
+
+          // draw pose skeleton on the same canvas
+          tmPose.drawKeypoints(pose.keypoints, 0.5, localCtx);
+          tmPose.drawSkeleton(pose.keypoints, 0.5, localCtx, '#22c55e', 3);
+
+          setStatus('Analysis complete.');
+        }catch(err){
+          console.error('Image processing failed:', err && err.name, err && err.message, err && err.stack);
+          setStatus('Image processing failed: ' + (err && err.message), 'error');
+        }finally{
+          try{ (window.URL || window.webkitURL).revokeObjectURL(objectUrl); }catch(e){}
+        }
+      };
+
+      img.onerror = (err)=>{
+        console.error('Image load error', err);
+        setStatus('Could not load the image file.', 'error');
+        try{ (window.URL || window.webkitURL).revokeObjectURL(objectUrl); }catch(e){}
+      };
+    }
+
+    // -----------------------------
+    // Rendering helpers
+    // -----------------------------
+    function renderPredictions(prediction){
+      if(!prediction || !prediction.length) { labelContainer.innerHTML = '<div class="small">No predictions</div>'; return; }
+      // simple top-first
+      const items = prediction.slice().sort((a,b)=>b.probability - a.probability);
+      labelContainer.innerHTML = items.map(p=>`<div class="pred-item"><strong>${p.className}</strong> — ${(p.probability*100).toFixed(1)}%</div>`).join('');
+    }
+
+    function renderPoseOnOverlay(pose){
+      if(!ctx || !pose) return;
+      ctx.clearRect(0,0,ctx.canvas.width, ctx.canvas.height);
+      const minConf = 0.5;
+      if(window.tmPose){
+        tmPose.drawKeypoints(pose.keypoints, minConf, ctx);
+        tmPose.drawSkeleton(pose.keypoints, minConf, ctx, '#22c55e', 3);
+      }
+    }
+
+    function takeSnapshot(){
+      if(!videoEl && !overlayCanvas){ setStatus('Nothing to snapshot.'); return; }
+      const w = overlayCanvas ? overlayCanvas.width : (videoEl.videoWidth||640);
+      const h = overlayCanvas ? overlayCanvas.height : (videoEl.videoHeight||480);
+      const tmp = document.createElement('canvas'); tmp.width = w; tmp.height = h;
+      const tctx = tmp.getContext('2d');
+      try{ if(videoEl) tctx.drawImage(videoEl,0,0,w,h); }catch(e){}
+      if(overlayCanvas) tctx.drawImage(overlayCanvas,0,0,w,h);
+      const link = document.createElement('a'); link.download = `vakta-${Date.now()}.png`; link.href = tmp.toDataURL('image/png'); link.click();
+    }
+
+    // -----------------------------
+    // Diagnostics / tests (added extra tests)
+    // -----------------------------
+    async function runDiagnostics(){
+      testsEl.innerHTML = '';
+      addTest('Secure context (HTTPS or localhost)', !!window.isSecureContext, window.isSecureContext ? '' : 'Use https or localhost');
+      addTest('MediaDevices available', !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia));
+      addTest('window.URL.createObjectURL', typeof (window.URL || window.webkitURL)?.createObjectURL === 'function');
+      addTest('tfjs loaded', !!window.tf, window.tf ? `tfjs v${tf.version_core||'1.x'}` : '');
+      addTest('tmPose loaded', !!window.tmPose);
+
+      // try enumerate devices
+      try{ const devs = await navigator.mediaDevices.enumerateDevices(); addTest('camera devices', devs.filter(d=>d.kind==='videoinput').length>0, `${devs.filter(d=>d.kind==='videoinput').length} cameras`); }catch(e){ addTest('camera devices', false, e && e.message); }
+
+      // try fetching model.json to ensure accessible
+      try{
+        const r = await fetch(TM_URL + 'model.json', {method:'GET'});
+        addTest('Model reachable (model.json)', r.ok, `status ${r.status}`);
+      }catch(e){ addTest('Model reachable (model.json)', false, e && e.message); }
+
+      if(allPass) {
+    popup.textContent = "All systems fine and working well";
+    popup.classList.add("show");
+    setTimeout(()=>popup.classList.remove("show"), 3000);
+  }
+    }
+
+    function addTest(name, pass, detail=''){ const el = document.createElement('div'); el.className='test'; el.innerHTML = `<span>${name}</span><span class='${pass? 'ok':'fail'}'>${pass? '✔':'✖'}</span>`; if(detail){ const d = document.createElement('div'); d.className='small'; d.style.marginTop='6px'; d.textContent = detail; el.appendChild(d);} testsEl.appendChild(el); }
+
+    // -----------------------------
+    // Events & init
+    // -----------------------------
+    webcamButton.addEventListener('click', ()=>{ isWebcamRunning ? stopWebcam() : startWebcam(); });
+    uploadButton.addEventListener('click', ()=> fileInput.click());
+    fileInput.addEventListener('change', processImageUpload);
+    snapshotBtn.addEventListener('click', takeSnapshot);
+    clearBtn.addEventListener('click', ()=>{
+      //Stop webcam if running
+      if (isWebcamRunning) stopWebcam();
+    labelContainer.innerHTML=''; document.getElementById('webcam-container').innerHTML='';document.getElementById('webcam-container').classList.remove('analyzed'); setStatus('Cleared.'); });
+    document.getElementById('run-tests').addEventListener('click', runDiagnostics);
+
+    // shortcuts
+    window.addEventListener('keydown', (e)=>{ if(e.key.toLowerCase()==='w') { isWebcamRunning ? stopWebcam() : startWebcam(); } if(e.key.toLowerCase()==='u') fileInput.click(); if(e.key.toLowerCase()==='s') takeSnapshot(); });
+
+    // pre-run diagnostics (quick)
+    (async ()=>{ try{ await runDiagnostics(); }catch(e){ console.warn('Diagnostics error', e); } })();
+  </script>
 </body>
 </html>
