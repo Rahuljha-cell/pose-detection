@@ -276,6 +276,7 @@
       transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
       z-index: 1000;
       border: 1px solid rgba(255, 255, 255, 0.2);
+      max-width: 350px;
     }
     .notification.show {
       transform: translateX(0);
@@ -286,6 +287,15 @@
     }
     .notification.error {
       background: linear-gradient(135deg, var(--error), #dc2626);
+    }
+    .notification-title {
+      font-weight: 700;
+      margin-bottom: 4px;
+      font-size: 16px;
+    }
+    .notification-message {
+      font-size: 14px;
+      opacity: 0.9;
     }
     .confidence-bar {
       width: 100%;
@@ -332,6 +342,12 @@
       .card {
         padding: 20px;
       }
+      
+      .notification {
+        max-width: 280px;
+        right: 20px;
+        top: 20px;
+      }
     }
   </style>
 </head>
@@ -339,7 +355,7 @@
   <div class="card">
     <div class="header">
       <div class="title-section">
-        <h1>VAKTA.AI — Public Speaking Coach</h1>
+        <h1>VAKTA.AI — Enhanced Public Speaking Coach</h1>
         <div class="subtitle">Enhanced UI with intelligent pose detection and real-time feedback</div>
       </div>
       <div class="shortcuts">
@@ -381,7 +397,10 @@
       </div>
     </div>
   </div>
-  <div id="notification" class="notification"></div>
+  <div id="notification" class="notification">
+    <div class="notification-title"></div>
+    <div class="notification-message"></div>
+  </div>
   <!-- Teachable Machine Scripts (Exact same as working version) -->
   <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@1.3.1/dist/tf.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@teachablemachine/pose@0.8/dist/teachablemachine-pose.min.js"></script>
@@ -396,6 +415,59 @@
     let lastTopPrediction = null;
     let currentModelURL = MODEL_URL;
     
+    // Posture messages mapping with variations
+    const postureMessages = {
+      "Confident Posture": "Strong stance — keep it up!",
+      "confident posture": "Strong stance — keep it up!",
+      "Confident": "Strong stance — keep it up!",
+      "confident": "Strong stance — keep it up!",
+      "Overactive Gestures": "Slow down — use calmer gestures.",
+      "overactive gestures": "Slow down — use calmer gestures.",
+      "Overactive": "Slow down — use calmer gestures.",
+      "overactive": "Slow down — use calmer gestures.",
+      "Slouched Posture": "Stand tall to show confidence.",
+      "slouched posture": "Stand tall to show confidence.",
+      "Slouched": "Stand tall to show confidence.",
+      "slouched": "Stand tall to show confidence.",
+      "Fidgeting": "Stay steady, avoid restless moves.",
+      "fidgeting": "Stay steady, avoid restless moves.",
+      "Frozen Posture": "Loosen up — add natural gestures.",
+      "frozen posture": "Loosen up — add natural gestures.",
+      "Frozen": "Loosen up — add natural gestures.",
+      "frozen": "Loosen up — add natural gestures."
+    };
+    
+    // Function to get posture message with flexible matching
+    function getPostureMessage(postureName) {
+      console.log("Looking for message for posture:", postureName);
+      
+      // Try exact match first
+      if (postureMessages[postureName]) {
+        console.log("Found exact match:", postureMessages[postureName]);
+        return postureMessages[postureName];
+      }
+      
+      // Try case-insensitive match
+      const lowerCaseName = postureName.toLowerCase();
+      for (const [key, value] of Object.entries(postureMessages)) {
+        if (key.toLowerCase() === lowerCaseName) {
+          console.log("Found case-insensitive match:", value);
+          return value;
+        }
+      }
+      
+      // Try partial match (contains)
+      for (const [key, value] of Object.entries(postureMessages)) {
+        if (lowerCaseName.includes(key.toLowerCase()) || key.toLowerCase().includes(lowerCaseName)) {
+          console.log("Found partial match:", value);
+          return value;
+        }
+      }
+      
+      console.log("No match found, using default");
+      return `${postureName} detected - maintain awareness of your posture`;
+    }
+    
     // UI elements
     const statusEl = document.getElementById('status');
     const webcamButton = document.getElementById('webcam-button');
@@ -407,18 +479,21 @@
     const confidenceFill = document.getElementById('confidence-fill');
     const testsEl = document.getElementById('tests');
     const notification = document.getElementById('notification');
+    const notificationTitle = document.querySelector('.notification-title');
+    const notificationMessage = document.querySelector('.notification-message');
     
     function setStatus(msg, type) {
       statusEl.textContent = msg;
       statusEl.style.color = type === 'error' ? 'var(--error)' : 'var(--text-secondary)';
     }
     
-    function showNotification(message, type = 'success') {
-      notification.textContent = message;
+    function showNotification(title, message, type = 'success') {
+      notificationTitle.textContent = title;
+      notificationMessage.textContent = message;
       notification.className = `notification show ${type}`;
       setTimeout(() => {
         notification.classList.remove('show');
-      }, 3000);
+      }, 5000); // Increased duration to 5 seconds for better readability
     }
     
     // Load model with fallback options
@@ -448,7 +523,7 @@
           maxPredictions = model.getTotalClasses();
           
           setStatus('✅ Model loaded successfully');
-          showNotification('Your model loaded!');
+          showNotification('Model Loaded', 'Your AI model is ready!', 'success');
           return; // Success, exit the loop
           
         } catch (err) {
@@ -456,7 +531,7 @@
           if (i === modelsToTry.length - 1) {
             // Last attempt failed
             setStatus('❌ All models failed to load', 'error');
-            showNotification('Cannot load any model. Check internet connection.', 'error');
+            showNotification('Error', 'Cannot load any model. Check internet connection.', 'error');
             throw err;
           }
         }
@@ -468,7 +543,7 @@
       if (isWebcamRunning) return;
       if (!window.isSecureContext) {
         setStatus('⚠️ Requires HTTPS or localhost for camera access', 'error');
-        showNotification('Camera requires secure connection', 'error');
+        showNotification('Security Error', 'Camera requires secure connection', 'error');
         return;
       }
       webcamButton.disabled = true;
@@ -496,7 +571,7 @@
         webcamButton.textContent = '⏹ Stop Webcam';
         webcamButton.disabled = false;
         setStatus('🎥 Webcam active - Detecting poses...');
-        showNotification('Webcam started successfully!');
+        showNotification('Webcam Started', 'Camera is now active and analyzing your posture', 'success');
         
         // Start the prediction loop (same as working code)
         webcamLoop();
@@ -508,7 +583,7 @@
         else if (err?.name === 'NotReadableError') msg = 'Camera busy';
         
         setStatus('❌ ' + msg, 'error');
-        showNotification(msg, 'error');
+        showNotification('Camera Error', msg, 'error');
         webcamButton.disabled = false;
         webcamButton.textContent = '▶ Start Webcam';
       }
@@ -587,6 +662,9 @@
       setStatus('🔍 Analyzing image...');
       predictionIndicators.innerHTML = '<div class="prediction-chip">Processing...</div>';
       
+      // Reset last top prediction to ensure notification shows for uploaded image
+      lastTopPrediction = null;
+      
       try {
         console.log("Loading model...");
         await loadModel();
@@ -641,7 +719,8 @@
         const prediction = await model.predict(posenetOutput);
         console.log("Prediction completed:", prediction);
         
-        renderPredictionsAsToolbar(prediction);
+        // Render predictions and get the top prediction
+        const topPrediction = renderPredictionsAsToolbar(prediction, true);
         
         // Draw pose on the same canvas
         if (window.tmPose && pose) {
@@ -650,36 +729,71 @@
           tmPose.drawSkeleton(pose.keypoints, minPartConfidence, ctx, '#10b981', 3);
         }
         
+        // Show custom posture message for uploaded image
+        if (topPrediction && topPrediction.probability > 0.6) {
+          const postureName = topPrediction.className;
+          const message = getPostureMessage(postureName);
+          
+          console.log("Showing notification for:", postureName, "with message:", message);
+          
+          // Determine notification type based on posture
+          let notificationType = 'success';
+          if (postureName.toLowerCase().includes("overactive") || 
+              postureName.toLowerCase().includes("slouched") || 
+              postureName.toLowerCase().includes("fidgeting") || 
+              postureName.toLowerCase().includes("frozen")) {
+            notificationType = 'warning';
+          }
+          
+          showNotification(postureName, message, notificationType);
+        } else {
+          // If no clear posture detected, show generic message
+          showNotification('Analysis Complete', 'Image analyzed successfully!', 'success');
+        }
+        
         setStatus('✅ Analysis complete');
-        showNotification('Image analyzed successfully!');
         // Use window.URL to revoke the object URL
         window.URL.revokeObjectURL(objectUrl);
         
       } catch (err) {
         console.error('Image processing failed:', err);
         setStatus('❌ Image processing failed: ' + err.message, 'error');
-        showNotification('Image processing failed: ' + err.message, 'error');
+        showNotification('Processing Error', 'Image processing failed: ' + err.message, 'error');
       }
     }
     
-    // Enhanced prediction rendering
-    function renderPredictionsAsToolbar(prediction) {
+    // Enhanced prediction rendering with custom posture messages
+    function renderPredictionsAsToolbar(prediction, isImageUpload = false) {
       if (!prediction?.length) {
         predictionIndicators.innerHTML = '<div class="prediction-chip">No predictions</div>';
         confidenceFill.style.width = '0%';
-        return;
+        return null;
       }
       
       const sorted = prediction.slice().sort((a, b) => b.probability - a.probability);
       const topPrediction = sorted[0];
       
-      // Check if top prediction changed and show notification
-      if (topPrediction.probability > 0.6 && 
-          (!lastTopPrediction || lastTopPrediction !== topPrediction.className)) {
-        const confidence = (topPrediction.probability * 100).toFixed(0);
-        showNotification(`${topPrediction.className} detected (${confidence}% confident)`, 
-                        topPrediction.probability > 0.8 ? 'success' : 'warning');
-        lastTopPrediction = topPrediction.className;
+      // For webcam, show notification only if posture changed
+      if (!isImageUpload) {
+        if (topPrediction.probability > 0.6 && 
+            (!lastTopPrediction || lastTopPrediction !== topPrediction.className)) {
+          const postureName = topPrediction.className;
+          const message = getPostureMessage(postureName);
+          
+          console.log("Webcam - Showing notification for:", postureName, "with message:", message);
+          
+          // Determine notification type based on posture
+          let notificationType = 'success';
+          if (postureName.toLowerCase().includes("overactive") || 
+              postureName.toLowerCase().includes("slouched") || 
+              postureName.toLowerCase().includes("fidgeting") || 
+              postureName.toLowerCase().includes("frozen")) {
+            notificationType = 'warning';
+          }
+          
+          showNotification(postureName, message, notificationType);
+          lastTopPrediction = topPrediction.className;
+        }
       }
       
       // Render prediction chips
@@ -711,11 +825,13 @@
       } else {
         confidenceFill.style.background = 'linear-gradient(90deg, var(--primary), var(--secondary))';
       }
+      
+      return topPrediction;
     }
     
     function takeSnapshot() {
       if (!webcam || !webcam.canvas) {
-        showNotification('Nothing to capture', 'warning');
+        showNotification('Error', 'Nothing to capture', 'warning');
         return;
       }
       
@@ -732,7 +848,7 @@
       link.href = canvas.toDataURL('image/png');
       link.click();
       
-      showNotification('Snapshot saved!');
+      showNotification('Snapshot Saved', 'Your pose image has been saved!', 'success');
     }
     
     // Diagnostics with library checks
@@ -771,9 +887,9 @@
       // Check if all critical systems are working
       const allCriticalPass = tfLoaded && tmLoaded && window.isSecureContext;
       if (allCriticalPass) {
-        showNotification('All systems ready!', 'success');
+        showNotification('Diagnostics Complete', 'All systems ready!', 'success');
       } else {
-        showNotification('Some systems need attention', 'warning');
+        showNotification('Dagnostics Warning', 'Some systems need attention', 'warning');
       }
     }
     
@@ -799,7 +915,7 @@
       confidenceFill.style.width = '0%';
       document.getElementById('webcam-container').innerHTML = '';
       setStatus('🔄 Reset complete');
-      showNotification('Interface cleared');
+      showNotification('Reset Complete', 'Interface cleared', 'success');
       lastTopPrediction = null;
     });
     
@@ -814,7 +930,7 @@
     // Initialize (simple startup)
     setTimeout(() => {
       setStatus('🚀 Ready to start - Click "Start Webcam" to begin');
-      showNotification('VAKTA.AI ready for pose detection!');
+      showNotification('Welcome to VAKTA.AI', 'Ready for pose detection!', 'success');
     }, 500);
   </script>
 </body>
